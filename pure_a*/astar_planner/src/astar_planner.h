@@ -92,15 +92,37 @@ namespace astar_planner {
       * @brief  Publish a path for visualization purposes
       */
       void publishPlan(const std::vector<geometry_msgs::PoseStamped>& path);
-
       Eigen::Isometry3d getSe3(geometry_msgs::PoseStamped current_pose_);
       double getGoalAngleDifference(const Eigen::Isometry3d& pose,const Eigen::Isometry3d& goal);
       bool getTrajectory(const Eigen::Isometry3d& pose, vector<double>& v_window, vector<double>& w_window, vector<double>& movingcost, vector<vector<Eigen::Isometry3d>>& trajectory);
       bool refine(vector<vector<Eigen::Isometry3d>>& trajectory);
+        static int factorial(int n) {
+            int ret = 1;
+            for (int i = 1; i <= n; ++i) {
+                ret *= i;
+            }
+            return ret;
+        }
+        pair<double, double> CalcTerm(int order, geometry_msgs::PoseStamped &pose, int i, double t){
+            //ROS_INFO("order = %d", order);
+            double comb = (factorial(order)/(factorial(i)*factorial(order-i)));
+            //ROS_INFO("Comb = %f", comb);
+            //ROS_INFO("Pose x = %f,y = %f",pose.pose.position.x,pose.pose.position.y);
+            pair<double, double> pair;
+            pair.first = comb*pose.pose.position.x*pow(1.0-t, order-i)* pow(t,i);
+            pair.second = comb*pose.pose.position.y*pow(1.0-t, order-i)* pow(t,i);
+
+
+            //ROS_INFO("x = %f, y = %f",pair.first,pair.second);
+            //ROS_INFO("smoothed x=%f, y=%f", pair.first, pair.second);
+            return pair;
+        }
+        bool CalcSpline(vector<geometry_msgs::PoseStamped> &bestTraj, vector<geometry_msgs::PoseStamped> &smoothTraj);
       ros::Publisher plan_pub_;
       std::string frame_id_;
-	  bool initialized_;
+	  bool initialized_{false};
 	  costmap_2d::Costmap2DROS* costmap_ros_;
 	  costmap_2d::Costmap2D* costmap_;
+      vector<geometry_msgs::PoseStamped>bestplan_;
     };
 };
